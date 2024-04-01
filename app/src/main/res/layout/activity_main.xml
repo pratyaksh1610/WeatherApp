@@ -71,6 +71,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
+                        android:layout_weight="1"
                         android:text="History"
                         android:textSize="20sp" />
 
@@ -78,8 +79,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
+                        android:layout_weight="1"
                         android:gravity="end"
-                        android:text="clear all"
+                        android:text="Clear all"
                         android:textSize="20sp" />
 
 

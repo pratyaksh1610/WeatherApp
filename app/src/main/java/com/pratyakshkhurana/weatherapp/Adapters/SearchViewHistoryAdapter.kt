@@ -3,10 +3,11 @@ package com.pratyakshkhurana.weatherapp.Adapters
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.databinding.RecyclerViewSearchViewHistoryEachItemBinding
 
 class SearchViewHistoryAdapter(
-    private val listOfSearchItems: List<String>,
+    private val listOfSearchItems: List<SearchViewHistory>,
     private val listen: OnSearchViewHistoryItemClicked,
 ) :
     RecyclerView.Adapter<SearchViewHistoryAdapter.SearchViewHistoryViewHolder>() {
@@ -31,15 +32,16 @@ class SearchViewHistoryAdapter(
         holder: SearchViewHistoryViewHolder,
         position: Int,
     ) {
-        holder.btntext.text = listOfSearchItems[position]
-        holder.btntext.setOnClickListener {
+        holder.btnText.text =
+            listOfSearchItems[position].id.toString() + " " + listOfSearchItems[position].history
+        holder.btnText.setOnClickListener {
             listen.onSearchViewHistoryItemClickedResponse(position)
         }
     }
 
     class SearchViewHistoryViewHolder(binding: RecyclerViewSearchViewHistoryEachItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        val btntext = binding.btn
+        val btnText = binding.btnSearchViewRecyclerViewEachItem
     }
 }
 

@@ -15,53 +15,28 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.pratyakshkhurana.weatherapp.Adapters.OnSearchViewHistoryItemClicked
 import com.pratyakshkhurana.weatherapp.Adapters.SearchViewHistoryAdapter
+import com.pratyakshkhurana.weatherapp.Database.DatabaseClass
+import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
 import com.pratyakshkhurana.weatherapp.SharedPreferences.SharedPrefs
+import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelClass
+import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelFactoryClass
 import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
     private lateinit var searchText: String
+    private lateinit var viewModel: ViewModelClass
 
     // for current location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
-    //    dummy data for search view history
-    private var listOfSearchViewHistoryItems: MutableList<String> =
-        mutableListOf(
-            "Adoni",
-            "Amaravati",
-            "Anantapur",
-            "Srikakulam",
-            "Tirupati",
-            "Vijayawada",
-            "Visakhapatnam",
-            "Vizianagaram",
-            "Yemmiganur",
-            "Adoni",
-            "Amaravati",
-            "Anantapur",
-            "Srikakulam",
-            "Tirupati",
-            "Vijayawada",
-            "Visakhapatnam",
-            "Vizianagaram",
-            "Yemmiganur",
-            "Adoni",
-            "Amaravati",
-            "Anantapur",
-            "Srikakulam",
-            "Tirupati",
-            "Vijayawada",
-            "Visakhapatnam",
-            "Vizianagaram",
-            "Yemmiganur",
-        )
 
     private val requestCode = 101
     private lateinit var sharedPreferences: SharedPrefs
@@ -81,6 +56,11 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         initialiseSharedPrefs()
         // initialise fusedLocationClient
         initialiseFusedProviderClient()
+
+        // use dependency injection (DI) later
+        createInstanceOfViewModel()
+
+        initialiseSearchViewRecyclerView()
 
         requestLocationPermission()
 
@@ -104,6 +84,13 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 },
             )
         }
+    }
+
+    private fun createInstanceOfViewModel() {
+        val db = DatabaseClass.getDatabase(this)
+        val repo = RepositoryClass(db)
+        val factory = ViewModelFactoryClass(repo)
+        viewModel = ViewModelProvider(this, factory)[ViewModelClass::class.java]
     }
 
     private fun initialiseFusedProviderClient() {
@@ -240,10 +227,28 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     }
 
     private fun initialiseSearchViewRecyclerView() {
-        binding.recyclerViewSearchItems.layoutManager =
-            LinearLayoutManager(this)
-        val adapter = SearchViewHistoryAdapter(listOfSearchViewHistoryItems, this)
-        binding.recyclerViewSearchItems.adapter = adapter
+        // working
+//        viewModel.insertSearchViewHistoryItem(
+//            SearchViewHistory(null, "delhi"),
+//        )
+//
+//        viewModel.insertSearchViewHistoryItem(
+//            SearchViewHistory(null, "delhi1"),
+//        )
+//
+//        viewModel.insertSearchViewHistoryItem(
+//            SearchViewHistory(null, "delhi2"),
+//        )
+        viewModel.getSearchViewHistoryItems().observe(
+            this,
+            Observer {
+                val listOfSearchViewHistoryItems = it
+                binding.recyclerViewSearchItems.layoutManager =
+                    LinearLayoutManager(this)
+                val adapter = SearchViewHistoryAdapter(listOfSearchViewHistoryItems, this)
+                binding.recyclerViewSearchItems.adapter = adapter
+            },
+        )
     }
 
     override fun onSearchViewHistoryItemClickedResponse(pos: Int) {
