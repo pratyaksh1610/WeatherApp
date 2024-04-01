@@ -2,9 +2,10 @@ package com.pratyakshkhurana.weatherapp
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.widget.TextView
 import android.widget.Toast
@@ -26,7 +27,11 @@ import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
     private lateinit var searchText: String
+
+    // for current location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    //    dummy data for search view history
     private var listOfSearchViewHistoryItems: MutableList<String> =
         mutableListOf(
             "Adoni",
@@ -58,7 +63,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             "Yemmiganur",
         )
 
-    //    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private val requestCode = 101
     private lateinit var sharedPreferences: SharedPrefs
 
@@ -73,8 +77,11 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             insets
         }
 
-        // request location permission and get current location lat/long coordinates
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        // initialise sharedPrefs object
+        initialiseSharedPrefs()
+        // initialise fusedLocationClient
+        initialiseFusedProviderClient()
+
         requestLocationPermission()
 
         binding.apply {
@@ -99,21 +106,46 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         }
     }
 
+    private fun initialiseFusedProviderClient() {
+        // request location permission and get current location lat/long coordinates
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+    }
+
+    private fun initialiseSharedPrefs() {
+        sharedPreferences = SharedPrefs(this)
+    }
+
     private fun requestLocationPermission() {
         when {
             ContextCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
             ) == PackageManager.PERMISSION_GRANTED -> {
-                // You can use the API that requires the permission.
-//                performAction(...)
-                fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location: Location? ->
-                        val lat = location?.latitude
-                        val lon = location?.longitude
-                        Toast.makeText(this, "$lat $lon", Toast.LENGTH_SHORT).show()
-                        // Got last known location. In some rare situations this can be null.
+                fusedLocationClient.lastLocation.addOnCompleteListener {
+                    // fetch current latitude and longitude
+                    val location = it.result
+
+                    if (location != null) {
+                        val lat = location.latitude
+                        val lon = location.longitude
+
+                        Log.e(SharedPrefs.LATITUDE_TAG, "$lat $lon")
+
+                        // save current latitude and longitude
+                        sharedPreferences.saveLatitude(lat.toString())
+                        sharedPreferences.saveLongitude(lon.toString())
+                        Log.e(
+                            SharedPrefs.LATITUDE_TAG,
+                            "${
+                                sharedPreferences.getLatitude()
+                            } + ${sharedPreferences.getLongitude()} ",
+                        )
+                        Toast.makeText(this, lat.toString(), Toast.LENGTH_SHORT).show()
+                    } else {
+                        // if location comes null in case
+                        toggleLocationServicesDialog()
                     }
+                }
             }
 
             ActivityCompat.shouldShowRequestPermissionRationale(
@@ -140,6 +172,23 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         }
     }
 
+    private fun toggleLocationServicesDialog() {
+        // Reference - https://developer.android.com/develop/sensors-and-location/location/retrieve-current#last-known
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Location services")
+            .setIcon(R.drawable.location_on_24px)
+            .setMessage("Toggle location services and try again.")
+            .setPositiveButton("Ok") { _, _ ->
+
+                // open device's location settings
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+                finish()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -156,6 +205,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 ) {
                     // Permission is granted. Continue the action or workflow
                     // in your app.
+                    Toast.makeText(this, "onreqper", Toast.LENGTH_SHORT).show()
                 } else {
                     showAskLocationPermissionDialog()
                 }
@@ -176,8 +226,12 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             .setTitle("Ask location permission")
             .setIcon(R.drawable.location_on_24px)
             .setMessage("Allow us to access this device's location !")
-            .setPositiveButton("Ok") { dialog, which ->
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            .setPositiveButton("Ok") { _, _ ->
+
+                // opens location services of a this application
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", packageName, null)
+                intent.setData(uri)
                 startActivity(intent)
                 finish()
             }

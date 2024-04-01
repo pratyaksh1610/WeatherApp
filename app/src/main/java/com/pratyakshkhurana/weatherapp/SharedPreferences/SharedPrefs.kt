@@ -4,45 +4,35 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SharedPrefs(context: Context) {
-    private val latitudeTag = "LATITUDE_TAG"
-    private val longitudeTag = "LONGITUDE_TAG"
-    private val locationPermissionGranted = "LOCATION_PERMISSION_GRANTED_TAG"
-    private val sharedPreferencesTag = "SHARED_PREFERENCES_TAG"
-
     private val sharedPrefs: SharedPreferences =
-        context.getSharedPreferences(sharedPreferencesTag, Context.MODE_PRIVATE)
+        context.getSharedPreferences(SHARED_PREFERENCES_TAG, Context.MODE_PRIVATE)
     private val editor: SharedPreferences.Editor = sharedPrefs.edit()
 
-    fun saveLatitude(lat: Float) {
+    fun saveLatitude(lat: String) {
         editor.apply {
-            putFloat(latitudeTag, lat)
+            putString(LATITUDE_TAG, lat)
             commit()
         }
     }
 
-    fun saveLongitude(long: Float) {
+    fun saveLongitude(long: String) {
         editor.apply {
-            putFloat(longitudeTag, long)
+            putString(LONGITUDE_TAG, long)
             commit()
         }
     }
 
-    fun getLatitude(): Float {
-        return sharedPrefs.getFloat(latitudeTag, 0f)
+    fun getLatitude(): String? {
+        return sharedPrefs.getString(LATITUDE_TAG, "0")
     }
 
-    fun getLongitude(): Float {
-        return sharedPrefs.getFloat(longitudeTag, 0f)
+    fun getLongitude(): String? {
+        return sharedPrefs.getString(LONGITUDE_TAG, "0")
     }
 
-    fun isLocationPermissionGranted(): Boolean {
-        return sharedPrefs.getBoolean(locationPermissionGranted, false)
-    }
-
-    fun saveLocationPermissionGrantedResult(code: Boolean) {
-        editor.apply {
-            putBoolean(locationPermissionGranted, code)
-            commit()
-        }
+    companion object {
+        const val SHARED_PREFERENCES_TAG = "SHARED_PREFERENCES_TAG"
+        const val LATITUDE_TAG = "LATITUDE_TAG"
+        const val LONGITUDE_TAG = "LONGITUDE_TAG"
     }
 }

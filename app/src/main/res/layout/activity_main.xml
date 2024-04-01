@@ -45,12 +45,14 @@
                 android:hint="Delhi" />
         </com.google.android.material.appbar.AppBarLayout>
 
+
         <com.google.android.material.search.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="Delhi"
             app:layout_anchor="@id/search_bar">
+
             <!-- Search suggestions/results go here (ScrollView, RecyclerView, etc.). -->
 
             <!--                recycler view to save results of searching in search view-->
