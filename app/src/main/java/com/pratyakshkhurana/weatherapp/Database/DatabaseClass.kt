@@ -8,7 +8,7 @@ import com.pratyakshkhurana.weatherapp.Dao.SearchViewHistoryDao
 import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 
 // increase version by 1 when we add other entities in db
-@Database(entities = [SearchViewHistory::class], version = 1, exportSchema = false)
+@Database(entities = [SearchViewHistory::class], version = 2, exportSchema = false)
 abstract class DatabaseClass : RoomDatabase() {
     // to access tables
     abstract fun searchViewHistoryDao(): SearchViewHistoryDao
@@ -30,7 +30,7 @@ abstract class DatabaseClass : RoomDatabase() {
                         context.applicationContext,
                         DatabaseClass::class.java,
                         "all_database",
-                    ).build()
+                    ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 // return instance
                 instance

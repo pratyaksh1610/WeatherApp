@@ -8,31 +8,19 @@ class SharedPrefs(context: Context) {
         context.getSharedPreferences(SHARED_PREFERENCES_TAG, Context.MODE_PRIVATE)
     private val editor: SharedPreferences.Editor = sharedPrefs.edit()
 
-    fun saveLatitude(lat: String) {
+    fun saveCountryOrCity(c: String) {
         editor.apply {
-            putString(LATITUDE_TAG, lat)
-            commit()
+            putString(SAVE_COUNTRY_OR_CITY, c)
+            apply()
         }
     }
 
-    fun saveLongitude(long: String) {
-        editor.apply {
-            putString(LONGITUDE_TAG, long)
-            commit()
-        }
-    }
-
-    fun getLatitude(): String? {
-        return sharedPrefs.getString(LATITUDE_TAG, "0")
-    }
-
-    fun getLongitude(): String? {
-        return sharedPrefs.getString(LONGITUDE_TAG, "0")
+    fun getCountryOrCity(): String {
+        return sharedPrefs.getString(SAVE_COUNTRY_OR_CITY, "Delhi").toString()
     }
 
     companion object {
         const val SHARED_PREFERENCES_TAG = "SHARED_PREFERENCES_TAG"
-        const val LATITUDE_TAG = "LATITUDE_TAG"
-        const val LONGITUDE_TAG = "LONGITUDE_TAG"
+        const val SAVE_COUNTRY_OR_CITY = "SAVE_COUNTRY_OR_CITY"
     }
 }

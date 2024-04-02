@@ -109,4 +109,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5")
 
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
+
+    // shimmer effect
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
 }

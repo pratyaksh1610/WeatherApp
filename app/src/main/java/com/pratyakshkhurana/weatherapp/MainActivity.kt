@@ -1,18 +1,14 @@
 package com.pratyakshkhurana.weatherapp
 
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import android.view.KeyEvent
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
@@ -20,10 +16,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.pratyakshkhurana.weatherapp.Adapters.OnSearchViewHistoryItemClicked
 import com.pratyakshkhurana.weatherapp.Adapters.SearchViewHistoryAdapter
+import com.pratyakshkhurana.weatherapp.Api.RetrofitInstance
 import com.pratyakshkhurana.weatherapp.Database.DatabaseClass
+import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
 import com.pratyakshkhurana.weatherapp.SharedPreferences.SharedPrefs
 import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelClass
@@ -32,226 +29,179 @@ import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var searchText: String
     private lateinit var viewModel: ViewModelClass
 
     // for current location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
-    private val requestCode = 101
     private lateinit var sharedPreferences: SharedPrefs
+    private lateinit var adapter: SearchViewHistoryAdapter
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         enableEdgeToEdge()
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.drawerLayout)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // initialise sharedPrefs object
-        initialiseSharedPrefs()
-        // initialise fusedLocationClient
-        initialiseFusedProviderClient()
-
-        // use dependency injection (DI) later
-        createInstanceOfViewModel()
+        // initialise late init variables
+        initialiseInstances()
 
         initialiseSearchViewRecyclerView()
 
-        requestLocationPermission()
+        getCurrentCityWeather(sharedPreferences.getCountryOrCity())
 
-        binding.apply {
-            searchView.editText.setOnEditorActionListener(
-                object : TextView.OnEditorActionListener {
-                    override fun onEditorAction(
-                        p0: TextView?,
-                        p1: Int,
-                        p2: KeyEvent?,
-                    ): Boolean {
-                        val text = p0?.text.toString()
-                        searchText = text
-                        // automatically comes back to search bar when search icon clicked on keyboard
-                        binding.searchView.handleBackInvoked()
+        binding.searchView
+            .editText
+            .setOnEditorActionListener { v, actionId, event ->
+                binding.searchBar.setText(v.text.toString())
+                binding.searchView.hide()
 
-                        Toast.makeText(applicationContext, searchText, Toast.LENGTH_SHORT).show()
-                        binding.searchBar.setText(searchText)
-                        return true
+                val searchBarText = binding.searchBar.text.toString()
+
+                Log.e("sea", "$searchBarText *")
+                if (searchBarText.isNotEmpty()) {
+                    searchBarText.trim()
+                    searchBarText[0].uppercase()
+
+                    if (viewModel.isResponseValid(
+                            binding.searchView.text.toString(),
+                            RetrofitInstance.API_KEY,
+                        )
+                    ) {
+                        searchBarText.trim()
+                        searchBarText[0].uppercase()
+                        sharedPreferences.saveCountryOrCity(searchBarText)
+                        getCurrentCityWeather(searchBarText)
+                        if (viewModel.isPresent(searchBarText) == 0) {
+                            viewModel.insertSearchViewHistoryItem(
+                                SearchViewHistory(
+                                    null,
+                                    searchBarText,
+                                ),
+                            )
+                        }
+                    } else {
+                        onShimmerEffect()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            offShimmerEffect()
+                            Toast.makeText(this, "Enter a valid city name", Toast.LENGTH_SHORT)
+                                .show()
+                        }, 2000)
                     }
-                },
-            )
-        }
+                    true
+                } else {
+                    viewModel.getSearchViewHistoryItems().observe(
+                        this,
+                        Observer {
+                            if (it.isEmpty()) {
+                                getCurrentCityWeather(sharedPreferences.getCountryOrCity())
+                                Log.e("city", sharedPreferences.getCountryOrCity())
+                            } else {
+                                getCurrentCityWeather(it.last().history)
+                                Log.e("city", sharedPreferences.getCountryOrCity())
+                            }
+                        },
+                    )
+                    true
+                }
+            }
     }
 
-    private fun createInstanceOfViewModel() {
+    private fun initialiseInstances() {
+        // initialise sharedPrefs object
+        sharedPreferences = SharedPrefs(this)
+
+        // initialise fusedLocationClient
+        // request location permission and get current location lat/long coordinates
+        fusedLocationClient =
+            LocationServices.getFusedLocationProviderClient(applicationContext)
+
+        // use dependency injection (DI) later
         val db = DatabaseClass.getDatabase(this)
         val repo = RepositoryClass(db)
         val factory = ViewModelFactoryClass(repo)
         viewModel = ViewModelProvider(this, factory)[ViewModelClass::class.java]
     }
 
-    private fun initialiseFusedProviderClient() {
-        // request location permission and get current location lat/long coordinates
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+    private fun onShimmerEffect() {
+        binding.shimmer.shimmerLayout.visibility = View.VISIBLE
+        binding.shimmer.shimmerLayout.startShimmer()
+        binding.mainWeatherLayout.mainWeatherLayoutXml.visibility = View.GONE
     }
 
-    private fun initialiseSharedPrefs() {
-        sharedPreferences = SharedPrefs(this)
+    private fun offShimmerEffect() {
+        binding.shimmer.shimmerLayout.visibility = View.GONE
+        binding.shimmer.shimmerLayout.stopShimmer()
+        binding.mainWeatherLayout.mainWeatherLayoutXml.visibility = View.VISIBLE
     }
 
-    private fun requestLocationPermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                fusedLocationClient.lastLocation.addOnCompleteListener {
-                    // fetch current latitude and longitude
-                    val location = it.result
+    private fun getCurrentCityWeather(toString: String) {
+        if (viewModel.isResponseValid(toString, RetrofitInstance.API_KEY)) {
+            offShimmerEffect()
+            viewModel.getCurrentWeather(toString, RetrofitInstance.API_KEY)
+                .observe(
+                    this@MainActivity,
+                    Observer { it ->
+                        val cityOrCountry = it.name
+                        val code = it.sys.country
+                        val concatCodeCityOrCountry = "$cityOrCountry $code"
+                        binding.mainWeatherLayout.tvCountryOrCity.text = concatCodeCityOrCountry
 
-                    if (location != null) {
-                        val lat = location.latitude
-                        val lon = location.longitude
+                        val desc = it.weather[0].main
+                        binding.mainWeatherLayout.weatherDesc.text = desc
 
-                        Log.e(SharedPrefs.LATITUDE_TAG, "$lat $lon")
+                        val humidity = it.main.humidity.toString()
+                        binding.mainWeatherLayout.humidityPercentage.text = "$humidity%"
 
-                        // save current latitude and longitude
-                        sharedPreferences.saveLatitude(lat.toString())
-                        sharedPreferences.saveLongitude(lon.toString())
-                        Log.e(
-                            SharedPrefs.LATITUDE_TAG,
-                            "${
-                                sharedPreferences.getLatitude()
-                            } + ${sharedPreferences.getLongitude()} ",
-                        )
-                        Toast.makeText(this, lat.toString(), Toast.LENGTH_SHORT).show()
-                    } else {
-                        // if location comes null in case
-                        toggleLocationServicesDialog()
-                    }
-                }
-            }
+                        binding.mainWeatherLayout.tempCelsius.text = it.main.temp.toString()
 
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-            ) -> {
-                // In an educational UI, explain to the user why your app requires this
-                // permission for a specific feature to behave as expected, and what
-                // features are disabled if it's declined. In this UI, include a
-                // "cancel" or "no thanks" button that lets the user continue
-                // using your app without granting the permission.
-//                showInContextUI(...)
-                showAskLocationPermissionDialog()
-            }
+                        binding.mainWeatherLayout.windPercent.text =
+                            it.wind.speed.toString() + " m/s"
 
-            else -> {
-                // You can directly ask for the permission.
-                // if user denies , then head over to system settings in onRequestPermissionsResult()
-                requestPermissions(
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    requestCode,
+                        binding.mainWeatherLayout.visibilityKm.text =
+                            ((it.visibility.toString().toDouble()) / 1000).toString() + " Km"
+                    },
                 )
-            }
         }
-    }
-
-    private fun toggleLocationServicesDialog() {
-        // Reference - https://developer.android.com/develop/sensors-and-location/location/retrieve-current#last-known
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Location services")
-            .setIcon(R.drawable.location_on_24px)
-            .setMessage("Toggle location services and try again.")
-            .setPositiveButton("Ok") { _, _ ->
-
-                // open device's location settings
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
-                finish()
-            }
-            .setCancelable(false)
-            .show()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray,
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            this.requestCode -> {
-                // If request is cancelled, the result arrays are empty.
-                if ((
-                        grantResults.isNotEmpty() &&
-                            grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    )
-                ) {
-                    // Permission is granted. Continue the action or workflow
-                    // in your app.
-                    Toast.makeText(this, "onreqper", Toast.LENGTH_SHORT).show()
-                } else {
-                    showAskLocationPermissionDialog()
-                }
-                return
-            }
-
-            // Add other 'when' lines to check for other
-            // permissions this app might request.
-            else -> {
-                showAskLocationPermissionDialog()
-                // Ignore all other requests.
-            }
-        }
-    }
-
-    private fun showAskLocationPermissionDialog() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Ask location permission")
-            .setIcon(R.drawable.location_on_24px)
-            .setMessage("Allow us to access this device's location !")
-            .setPositiveButton("Ok") { _, _ ->
-
-                // opens location services of a this application
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", packageName, null)
-                intent.setData(uri)
-                startActivity(intent)
-                finish()
-            }
-            .setCancelable(false)
-            .show()
     }
 
     private fun initialiseSearchViewRecyclerView() {
-        // working
-//        viewModel.insertSearchViewHistoryItem(
-//            SearchViewHistory(null, "delhi"),
-//        )
-//
-//        viewModel.insertSearchViewHistoryItem(
-//            SearchViewHistory(null, "delhi1"),
-//        )
-//
-//        viewModel.insertSearchViewHistoryItem(
-//            SearchViewHistory(null, "delhi2"),
-//        )
         viewModel.getSearchViewHistoryItems().observe(
-            this,
+            this@MainActivity,
             Observer {
-                val listOfSearchViewHistoryItems = it
-                binding.recyclerViewSearchItems.layoutManager =
-                    LinearLayoutManager(this)
-                val adapter = SearchViewHistoryAdapter(listOfSearchViewHistoryItems, this)
-                binding.recyclerViewSearchItems.adapter = adapter
+                if (it.isEmpty()) {
+                    Log.e("empty", "no history found")
+                } else {
+                    val listOfSearchViewHistoryItems: MutableList<SearchViewHistory> =
+                        it as MutableList<SearchViewHistory>
+                    binding.recyclerViewSearchItems.layoutManager =
+                        LinearLayoutManager(this@MainActivity)
+                    adapter =
+                        SearchViewHistoryAdapter(
+                            listOfSearchViewHistoryItems,
+                            this@MainActivity,
+                        )
+                    binding.recyclerViewSearchItems.adapter = adapter
+                }
             },
         )
     }
 
-    override fun onSearchViewHistoryItemClickedResponse(pos: Int) {
-        Toast.makeText(this, "item clicked search view ki", Toast.LENGTH_SHORT).show()
+    // delete search history item when click on close icon
+    override fun deleteItem(s: SearchViewHistory) {
+        viewModel.deleteSearchViewHistoryItem(s)
+    }
+
+    // get weather when click on any search history item text
+    override fun getWeather(s: SearchViewHistory) {
+        getCurrentCityWeather(s.history)
+        binding.searchView.editText.setText(s.history)
+        binding.searchBar.setText(binding.searchView.text.toString())
+        binding.searchView.hide()
     }
 }

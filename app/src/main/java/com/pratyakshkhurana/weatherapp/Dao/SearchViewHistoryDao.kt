@@ -13,9 +13,13 @@ interface SearchViewHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSearchViewHistoryItem(search: SearchViewHistory)
 
-    @Delete
+    @Delete(entity = SearchViewHistory::class)
     suspend fun deleteSearchViewHistoryItem(search: SearchViewHistory)
 
-    @Query("SELECT * FROM search_view_history_items")
+    @Query("SELECT * FROM search_view_history_items ORDER BY id DESC")
     fun getSearchViewHistoryItems(): LiveData<List<SearchViewHistory>>
+
+    // to insert unique search items
+    @Query("SELECT COUNT(*) FROM search_view_history_items WHERE history = :t")
+    suspend fun isPresent(t: String): Int
 }
