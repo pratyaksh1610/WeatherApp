@@ -67,6 +67,13 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 }
                 true
             }
+
+        binding.tvClearAll.setOnClickListener {
+            viewModel.deleteAllRecyclerViewItems()
+            adapter.emptyRecyclerView()
+            // last saved item is also delete when clear all is clicked, so update sharedPrefs or not
+//            sharedPreferences.saveCountryOrCity("delhi")
+        }
     }
 
     private fun initialiseInstances() {

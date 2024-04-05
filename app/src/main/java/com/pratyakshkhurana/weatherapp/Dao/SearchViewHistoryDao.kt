@@ -22,4 +22,7 @@ interface SearchViewHistoryDao {
     // to insert unique search items
     @Query("SELECT COUNT(*) FROM search_view_history_items WHERE history = :t")
     suspend fun isPresent(t: String): Int
+
+    @Query("DELETE FROM search_view_history_items")
+    suspend fun deleteAllRecyclerViewItems()
 }

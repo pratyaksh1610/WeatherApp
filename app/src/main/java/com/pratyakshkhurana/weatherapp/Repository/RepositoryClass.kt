@@ -30,4 +30,8 @@ class RepositoryClass(private val db: DatabaseClass) {
     suspend fun isPresent(t: String): Int {
         return db.searchViewHistoryDao().isPresent(t)
     }
+
+    suspend fun deleteAllRecyclerViewItems()  {
+        db.searchViewHistoryDao().deleteAllRecyclerViewItems()
+    }
 }

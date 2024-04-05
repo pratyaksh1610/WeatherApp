@@ -56,4 +56,10 @@ class ViewModelClass(
             }
         return res
     }
+
+    fun deleteAllRecyclerViewItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repositoryClass.deleteAllRecyclerViewItems()
+        }
+    }
 }

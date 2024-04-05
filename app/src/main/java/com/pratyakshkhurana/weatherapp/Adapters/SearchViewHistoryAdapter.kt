@@ -52,6 +52,12 @@ class SearchViewHistoryAdapter(
         notifyDataSetChanged()
     }
 
+    fun emptyRecyclerView() {
+        val l = mutableListOf<SearchViewHistory>()
+        listOfSearchItems = l
+        notifyDataSetChanged()
+    }
+
     class SearchViewHistoryViewHolder(binding: RecyclerViewSearchViewHistoryEachItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         val txt = binding.btnSearchViewRecyclerViewEachItem
