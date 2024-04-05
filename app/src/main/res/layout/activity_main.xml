@@ -70,6 +70,7 @@
         <com.google.android.material.search.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
+            android:focusable="false"
             android:layout_height="match_parent"
             android:hint="Delhi"
             app:layout_anchor="@id/search_bar">

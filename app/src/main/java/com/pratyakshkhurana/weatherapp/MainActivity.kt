@@ -14,8 +14,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.pratyakshkhurana.weatherapp.Adapters.OnSearchViewHistoryItemClicked
 import com.pratyakshkhurana.weatherapp.Adapters.SearchViewHistoryAdapter
 import com.pratyakshkhurana.weatherapp.Api.RetrofitInstance
@@ -31,8 +29,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ViewModelClass
 
-    // for current location
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var sharedPreferences: SharedPrefs
     private lateinit var adapter: SearchViewHistoryAdapter
 
@@ -53,6 +49,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
 
         initialiseSearchViewRecyclerView()
 
+        Log.e("pref", sharedPreferences.getCountryOrCity())
         getCurrentCityWeather(sharedPreferences.getCountryOrCity())
 
         binding.searchView
@@ -68,30 +65,19 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                     searchBarText.trim()
                     searchBarText[0].uppercase()
 
-                    if (viewModel.isResponseValid(
-                            binding.searchView.text.toString(),
-                            RetrofitInstance.API_KEY,
+                    searchBarText.trim()
+                    searchBarText[0].uppercase()
+                    sharedPreferences.saveCountryOrCity(searchBarText)
+                    onShimmerEffect()
+                    getCurrentCityWeather(searchBarText)
+                    // to get unique entries in search view history recycler view
+                    if (viewModel.isPresent(searchBarText) == 0) {
+                        viewModel.insertSearchViewHistoryItem(
+                            SearchViewHistory(
+                                null,
+                                searchBarText,
+                            ),
                         )
-                    ) {
-                        searchBarText.trim()
-                        searchBarText[0].uppercase()
-                        sharedPreferences.saveCountryOrCity(searchBarText)
-                        getCurrentCityWeather(searchBarText)
-                        if (viewModel.isPresent(searchBarText) == 0) {
-                            viewModel.insertSearchViewHistoryItem(
-                                SearchViewHistory(
-                                    null,
-                                    searchBarText,
-                                ),
-                            )
-                        }
-                    } else {
-                        onShimmerEffect()
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            offShimmerEffect()
-                            Toast.makeText(this, "Enter a valid city name", Toast.LENGTH_SHORT)
-                                .show()
-                        }, 2000)
                     }
                     true
                 } else {
@@ -116,11 +102,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         // initialise sharedPrefs object
         sharedPreferences = SharedPrefs(this)
 
-        // initialise fusedLocationClient
-        // request location permission and get current location lat/long coordinates
-        fusedLocationClient =
-            LocationServices.getFusedLocationProviderClient(applicationContext)
-
         // use dependency injection (DI) later
         val db = DatabaseClass.getDatabase(this)
         val repo = RepositoryClass(db)
@@ -141,12 +122,12 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     }
 
     private fun getCurrentCityWeather(toString: String) {
-        if (viewModel.isResponseValid(toString, RetrofitInstance.API_KEY)) {
-            offShimmerEffect()
-            viewModel.getCurrentWeather(toString, RetrofitInstance.API_KEY)
-                .observe(
-                    this@MainActivity,
-                    Observer { it ->
+        viewModel.getCurrentWeather(toString, RetrofitInstance.API_KEY)
+            .observe(
+                this@MainActivity,
+                Observer { it ->
+                    if (it != null) {
+                        offShimmerEffect()
                         val cityOrCountry = it.name
                         val code = it.sys.country
                         val concatCodeCityOrCountry = "$cityOrCountry $code"
@@ -165,9 +146,16 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
 
                         binding.mainWeatherLayout.visibilityKm.text =
                             ((it.visibility.toString().toDouble()) / 1000).toString() + " Km"
-                    },
-                )
-        }
+                    } else {
+                        onShimmerEffect()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            offShimmerEffect()
+                            Toast.makeText(this, "Enter a valid city name", Toast.LENGTH_SHORT)
+                                .show()
+                        }, 2000)
+                    }
+                },
+            )
     }
 
     private fun initialiseSearchViewRecyclerView() {

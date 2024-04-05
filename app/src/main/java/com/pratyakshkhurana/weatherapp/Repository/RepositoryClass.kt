@@ -27,13 +27,6 @@ class RepositoryClass(private val db: DatabaseClass) {
         return RetrofitInstance.api.getCurrentWeather(city, key)
     }
 
-    suspend fun isResponseValid(
-        city: String,
-        key: String,
-    ): Boolean {
-        return RetrofitInstance.api.getCurrentWeather(city, key).isSuccessful
-    }
-
     suspend fun isPresent(t: String): Int {
         return db.searchViewHistoryDao().isPresent(t)
     }

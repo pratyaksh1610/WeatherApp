@@ -41,28 +41,9 @@ class ViewModelClass(
     ): MutableLiveData<CurrentWeather> {
         viewModelScope.launch(Dispatchers.IO) {
             val response = repositoryClass.getCurrentWeather(city, key)
-            if (response.isSuccessful) {
-                currentWeather.postValue(response.body())
-            }
+            currentWeather.postValue(response.body())
         }
         return currentWeather
-    }
-
-    fun isResponseValid(
-        city: String,
-        key: String,
-    ): Boolean {
-        // return value from a coroutine
-        val job: Deferred<Boolean> =
-            GlobalScope.async(Dispatchers.IO) {
-                repositoryClass.isResponseValid(city, key)
-            }
-
-        val response =
-            runBlocking {
-                job.await()
-            }
-        return response
     }
 
     fun isPresent(t: String): Int {
