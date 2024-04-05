@@ -28,7 +28,6 @@ import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ViewModelClass
-
     private lateinit var sharedPreferences: SharedPrefs
     private lateinit var adapter: SearchViewHistoryAdapter
 
@@ -55,46 +54,18 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         binding.searchView
             .editText
             .setOnEditorActionListener { v, actionId, event ->
-                binding.searchBar.setText(v.text.toString())
+                binding.searchBar.setText(v.text.toString().lowercase().trim())
+
                 binding.searchView.hide()
 
-                val searchBarText = binding.searchBar.text.toString()
+                val searchBarText = binding.searchBar.text.toString().lowercase().trim()
 
-                Log.e("sea", "$searchBarText *")
+                Log.e("searchBarText", "searchBarText : $searchBarText")
                 if (searchBarText.isNotEmpty()) {
-                    searchBarText.trim()
-                    searchBarText[0].uppercase()
-
-                    searchBarText.trim()
-                    searchBarText[0].uppercase()
-                    sharedPreferences.saveCountryOrCity(searchBarText)
                     onShimmerEffect()
                     getCurrentCityWeather(searchBarText)
-                    // to get unique entries in search view history recycler view
-                    if (viewModel.isPresent(searchBarText) == 0) {
-                        viewModel.insertSearchViewHistoryItem(
-                            SearchViewHistory(
-                                null,
-                                searchBarText,
-                            ),
-                        )
-                    }
-                    true
-                } else {
-                    viewModel.getSearchViewHistoryItems().observe(
-                        this,
-                        Observer {
-                            if (it.isEmpty()) {
-                                getCurrentCityWeather(sharedPreferences.getCountryOrCity())
-                                Log.e("city", sharedPreferences.getCountryOrCity())
-                            } else {
-                                getCurrentCityWeather(it.last().history)
-                                Log.e("city", sharedPreferences.getCountryOrCity())
-                            }
-                        },
-                    )
-                    true
                 }
+                true
             }
     }
 
@@ -127,6 +98,14 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 this@MainActivity,
                 Observer { it ->
                     if (it != null) {
+                        // to get unique entries in search view history recycler view
+                        sharedPreferences.saveCountryOrCity(toString)
+                        if (viewModel.isPresent(toString) == 0) {
+                            viewModel.insertSearchViewHistoryItem(
+                                SearchViewHistory(null, toString),
+                            )
+                        }
+
                         offShimmerEffect()
                         val cityOrCountry = it.name
                         val code = it.sys.country

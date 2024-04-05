@@ -9,7 +9,6 @@ import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -48,15 +47,13 @@ class ViewModelClass(
 
     fun isPresent(t: String): Int {
         val job: Deferred<Int> =
-            GlobalScope.async(Dispatchers.IO) {
+            viewModelScope.async(Dispatchers.IO) {
                 repositoryClass.isPresent(t)
             }
-
-        val result =
+        val res =
             runBlocking {
                 job.await()
             }
-
-        return result
+        return res
     }
 }

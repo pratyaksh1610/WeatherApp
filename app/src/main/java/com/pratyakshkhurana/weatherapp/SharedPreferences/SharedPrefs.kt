@@ -16,7 +16,7 @@ class SharedPrefs(context: Context) {
     }
 
     fun getCountryOrCity(): String {
-        return sharedPrefs.getString(SAVE_COUNTRY_OR_CITY, "Delhi").toString()
+        return sharedPrefs.getString(SAVE_COUNTRY_OR_CITY, "delhi").toString()
     }
 
     companion object {
