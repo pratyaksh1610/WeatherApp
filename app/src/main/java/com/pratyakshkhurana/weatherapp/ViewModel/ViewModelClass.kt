@@ -18,7 +18,8 @@ class ViewModelClass(
     private val repositoryClass: RepositoryClass,
 ) : ViewModel() {
     private val currentWeather: MutableLiveData<CurrentWeather> = MutableLiveData()
-    private val currentWeatherEveryThreeHour: MutableLiveData<EveryThreeHourWeatherForecast> = MutableLiveData()
+    private val currentWeatherEveryThreeHour: MutableLiveData<EveryThreeHourWeatherForecast> =
+        MutableLiveData()
 
     fun insertSearchViewHistoryItem(search: SearchViewHistory) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -34,17 +35,6 @@ class ViewModelClass(
 
     fun getSearchViewHistoryItems(): LiveData<List<SearchViewHistory>> {
         return repositoryClass.getSearchViewHistoryItems()
-    }
-
-    fun getCurrentWeather(
-        city: String,
-        key: String,
-    ): MutableLiveData<CurrentWeather> {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = repositoryClass.getCurrentWeather(city, key)
-            currentWeather.postValue(response.body())
-        }
-        return currentWeather
     }
 
     fun isPresent(t: String): Int {
@@ -65,14 +55,24 @@ class ViewModelClass(
         }
     }
 
-    fun getCurrentWeatherEveryThreeHour(
+    fun getAllWeatherData(
         city: String,
         key: String,
-    ): MutableLiveData<EveryThreeHourWeatherForecast> {
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = repositoryClass.getCurrentWeatherEveryThreeHour(city, key)
-            currentWeatherEveryThreeHour.postValue(response.body())
+            repositoryClass.getCurrentWeather(city, key).apply {
+                currentWeather.postValue(this.body())
+            }
         }
-        return currentWeatherEveryThreeHour
+
+        viewModelScope.launch(Dispatchers.IO) {
+            repositoryClass.getCurrentWeatherEveryThreeHour(city, key).apply {
+                currentWeatherEveryThreeHour.postValue(this.body())
+            }
+        }
     }
+
+    fun getCurrentWeatherLiveData() = currentWeather
+
+    fun getCurrentWeatherEveryThreeHourLiveData() = currentWeatherEveryThreeHour
 }

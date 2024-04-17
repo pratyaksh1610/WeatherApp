@@ -50,17 +50,13 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             insets
         }
 
-        /*************/
-
-        // ////////////////////////
-
         // initialise late init variables
         initialiseInstances()
 
         initialiseSearchViewRecyclerView()
 
         Log.e("pref", sharedPreferences.getCountryOrCity())
-        getCurrentCityWeather(sharedPreferences.getCountryOrCity())
+        getCurrentCityWeatherData(sharedPreferences.getCountryOrCity())
 
         binding.searchView
             .editText
@@ -74,7 +70,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 Log.e("searchBarText", "searchBarText : $searchBarText")
                 if (searchBarText.isNotEmpty()) {
                     onShimmerEffect()
-                    getCurrentCityWeather(searchBarText)
+                    getCurrentCityWeatherData(searchBarText)
                 }
                 true
             }
@@ -110,8 +106,10 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         binding.mainWeatherLayout.mainWeatherLayoutXml.visibility = View.VISIBLE
     }
 
-    private fun getCurrentCityWeather(toString: String) {
-        viewModel.getCurrentWeather(toString, RetrofitInstance.API_KEY)
+    private fun getCurrentCityWeatherData(toString: String) {
+        viewModel.getAllWeatherData(toString, RetrofitInstance.API_KEY)
+
+        viewModel.getCurrentWeatherLiveData()
             .observe(
                 this@MainActivity,
                 Observer { it ->
@@ -153,11 +151,8 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                     }
                 },
             )
-        getCurrentWeatherEveryThreeHours(toString)
-    }
 
-    private fun getCurrentWeatherEveryThreeHours(c: String) {
-        viewModel.getCurrentWeatherEveryThreeHour(c, RetrofitInstance.API_KEY).observe(
+        viewModel.getCurrentWeatherEveryThreeHourLiveData().observe(
             this@MainActivity,
             Observer {
                 if (it != null) {
@@ -192,7 +187,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             },
         )
 
-        getThisWeekWeather(c)
+        getThisWeekWeather(toString)
     }
 
     private fun getThisWeekWeather(c: String) {
@@ -261,7 +256,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
 
     // get weather when click on any search history item text
     override fun getWeather(s: SearchViewHistory) {
-        getCurrentCityWeather(s.history)
+        getCurrentCityWeatherData(s.history)
         binding.searchView.editText.setText(s.history)
         binding.searchBar.setText(binding.searchView.text.toString())
         binding.searchView.hide()
