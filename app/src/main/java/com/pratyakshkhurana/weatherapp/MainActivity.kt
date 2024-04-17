@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                         val humidity = it.main.humidity.toString()
                         binding.mainWeatherLayout.humidityPercentage.text = "$humidity%"
 
-                        binding.mainWeatherLayout.tempCelsius.text = it.main.temp.toInt().toString()
+                        binding.mainWeatherLayout.tempCelsius.text = "${it.main.temp.toInt()}°"
 
                         binding.mainWeatherLayout.windPercent.text =
                             it.wind.speed.toString() + " m/s"
