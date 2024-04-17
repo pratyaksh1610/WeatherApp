@@ -27,11 +27,12 @@ import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelClass
 import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelFactoryClass
 import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
-import java.util.Calendar
-import java.util.Date
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.TimeZone
 
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
@@ -53,7 +54,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
 
         // initialise late init variables
         initialiseInstances()
-
         initialiseSearchViewRecyclerView()
 
         Log.e("pref", sharedPreferences.getCountryOrCity())
@@ -148,6 +148,9 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
 
                         binding.mainWeatherLayout.visibilityKm.text =
                             ((it.visibility.toString().toDouble()) / 1000).toString() + " Km"
+
+                        binding.mainWeatherLayout.dayAndDate.text =
+                            unixTimestampToFormattedDate(it.dt.toLong())
                     } else {
                         onShimmerEffect()
                         Handler(Looper.getMainLooper()).postDelayed({
@@ -261,28 +264,17 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         return outputTimeString
     }
 
-    private fun todaysDate(): String {
-        // Get current date
-        // Get current date
-        val calendar: Calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
-        val currentDate: String = dateFormat.format(calendar.time)
+    private fun unixTimestampToFormattedDate(unixTimestamp: Long): String {
+        // Convert Unix timestamp to a LocalDateTime object in UTC
+        val dateTime =
+            LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(unixTimestamp),
+                ZoneId.of("UTC"),
+            )
 
-        Log.d("CurrentDate", currentDate)
-        return currentDate
-    }
-
-    private fun convertEpochTimeStampDtxToIst() {
-        // Convert Epoch Unix Timestamp to GMT
-        val currentEpochTimestamp = System.currentTimeMillis() / 1000
-
-        val date = Date(currentEpochTimestamp * 1000L)
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        sdf.timeZone = TimeZone.getTimeZone("Asia/Kolkata")
-        val gmtTime = sdf.format(date)
-
-        // Print or use the GMT time as needed
-        Log.d("GMT", gmtTime)
+        // Format the LocalDateTime object to "Thursday, January 01" format
+        val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd")
+        return dateTime.format(formatter)
     }
 
     private fun initialiseSearchViewRecyclerView() {
