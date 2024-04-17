@@ -1,7 +1,6 @@
 package com.pratyakshkhurana.weatherapp
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,7 +8,6 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -114,7 +112,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         binding.mainWeatherLayout.mainWeatherLayoutXml.visibility = View.VISIBLE
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getCurrentCityWeatherData(toString: String) {
         binding.swipeRefreshLayout.isRefreshing = false
         viewModel.getAllWeatherData(toString, RetrofitInstance.API_KEY)
@@ -198,7 +195,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getTemperatureForWeek(l: MutableList<ThisWeekDataDateAndWeather>): MutableList<ThisWeekDataDateAndWeather> {
         val uniqueFieldsMap = mutableMapOf<String, Pair<String, String>>()
         for (i in l) {
@@ -230,7 +226,6 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         return finalThisWeekTempData
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun convertDateToDay(dateString: String): String {
         // Parse the date string into a LocalDate object
         val date = LocalDate.parse(dateString)
