@@ -31,8 +31,8 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:text="Paris"
-                android:textStyle="bold"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -42,8 +42,8 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingTop="10dp"
             android:paddingLeft="10dp"
+            android:paddingTop="10dp"
             android:paddingRight="10dp"
             android:paddingBottom="5dp">
 
@@ -62,8 +62,8 @@
             android:layout_gravity="center"
             android:orientation="vertical"
             android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:paddingTop="5dp">
+            android:paddingTop="5dp"
+            android:paddingRight="10dp">
 
 
             <com.google.android.material.textview.MaterialTextView
@@ -84,10 +84,10 @@
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tempCelsius"
-                android:layout_marginLeft="30dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:layout_marginLeft="30dp"
                 android:gravity="center_horizontal"
                 android:text="29°"
                 android:textSize="130sp" />
@@ -108,10 +108,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center">
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="?attr/colorPrimaryContainer"
                 app:cardCornerRadius="20dp">
 
                 <LinearLayout
@@ -228,62 +227,15 @@
 
                 </LinearLayout>
 
-                <!--                <LinearLayout-->
-                <!--                    android:visibility="gone"-->
-                <!--                    android:layout_width="match_parent"-->
-                <!--                    android:layout_height="match_parent"-->
-                <!--                    android:gravity="center"-->
-                <!--                    android:orientation="horizontal"-->
-                <!--                    android:padding="10dp">-->
-
-                <!--                    <LinearLayout-->
-                <!--                        android:layout_width="wrap_content"-->
-                <!--                        android:layout_height="wrap_content"-->
-                <!--                        android:layout_gravity="center"-->
-                <!--                        android:layout_weight="1"-->
-                <!--                        android:gravity="center"-->
-                <!--                        android:orientation="vertical">-->
-
-
-                <!--                     -->
-                <!--                    </LinearLayout>-->
-
-
-                <!--                    <LinearLayout-->
-                <!--                        android:layout_width="wrap_content"-->
-                <!--                        android:layout_height="wrap_content"-->
-                <!--                        android:layout_gravity="center"-->
-                <!--                        android:layout_weight="1"-->
-                <!--                        android:gravity="center"-->
-                <!--                        android:orientation="vertical">-->
-
-
-                <!--                     -->
-                <!--                    </LinearLayout>-->
-
-                <!--                    <LinearLayout-->
-                <!--                        android:layout_width="wrap_content"-->
-                <!--                        android:layout_height="wrap_content"-->
-                <!--                        android:layout_gravity="center"-->
-                <!--                        android:layout_weight="1"-->
-                <!--                        android:gravity="center"-->
-                <!--                        android:orientation="vertical">-->
-
-
-                <!--                    </LinearLayout>-->
-
-
-                <!--                </LinearLayout>-->
-
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
 
         </LinearLayout>
 
         <LinearLayout
-            android:paddingTop="20dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp">
 
             <com.google.android.material.textview.MaterialTextView
                 android:layout_width="wrap_content"
@@ -296,26 +248,16 @@
 
         <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:layout_height="wrap_content">
+            android:gravity="center_horizontal">
 
-<!--            <androidx.cardview.widget.CardView-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:backgroundTint="?attr/colorPrimaryContainer"-->
-<!--                android:padding="10dp"-->
-<!--                app:cardCornerRadius="20dp">-->
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view_this_week_weather"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:padding="10dp" />
-
-
-<!--            </androidx.cardview.widget.CardView>-->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_this_week_weather"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="10dp" />
 
         </LinearLayout>
 
