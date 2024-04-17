@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         binding = ActivityMainBinding.inflate(layoutInflater)
         enableEdgeToEdge()
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.drawerLayout)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.coordinator)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
@@ -81,6 +81,11 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             // last saved item is also delete when clear all is clicked, so update sharedPrefs or not
 //            sharedPreferences.saveCountryOrCity("delhi")
         }
+
+        // pull to refresh
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            getCurrentCityWeatherData(sharedPreferences.getCountryOrCity())
+        }
     }
 
     private fun initialiseInstances() {
@@ -107,6 +112,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     }
 
     private fun getCurrentCityWeatherData(toString: String) {
+        binding.swipeRefreshLayout.isRefreshing = false
         viewModel.getAllWeatherData(toString, RetrofitInstance.API_KEY)
 
         viewModel.getCurrentWeatherLiveData()
@@ -147,6 +153,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                             offShimmerEffect()
                             Toast.makeText(this, "Enter a valid city name", Toast.LENGTH_SHORT)
                                 .show()
+                            binding.searchBar.setText("")
                         }, 2000)
                     }
                 },
