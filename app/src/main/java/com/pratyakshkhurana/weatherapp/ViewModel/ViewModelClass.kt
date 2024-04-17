@@ -18,7 +18,7 @@ class ViewModelClass(
     private val repositoryClass: RepositoryClass,
 ) : ViewModel() {
     private val currentWeather: MutableLiveData<CurrentWeather> = MutableLiveData()
-    private val currentWeatherEveryThreeHour: MutableLiveData<EveryThreeHourWeatherForecast> =
+    private val currentWeekWeather: MutableLiveData<EveryThreeHourWeatherForecast> =
         MutableLiveData()
 
     fun insertSearchViewHistoryItem(search: SearchViewHistory) {
@@ -66,13 +66,13 @@ class ViewModelClass(
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            repositoryClass.getCurrentWeatherEveryThreeHour(city, key).apply {
-                currentWeatherEveryThreeHour.postValue(this.body())
+            repositoryClass.getThisWeekWeather(city, key).apply {
+                currentWeekWeather.postValue(this.body())
             }
         }
     }
 
     fun getCurrentWeatherLiveData() = currentWeather
 
-    fun getCurrentWeatherEveryThreeHourLiveData() = currentWeatherEveryThreeHour
+    fun getCurrentWeekWeatherLiveData() = currentWeekWeather
 }

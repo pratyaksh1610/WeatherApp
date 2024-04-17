@@ -16,7 +16,7 @@ interface ApiInterface {
     ): Response<CurrentWeather>
 
     @GET("data/2.5/forecast")
-    suspend fun getCurrentWeatherEveryThreeHour(
+    suspend fun getThisWeekWeather(
         @Query("q") q: String,
         @Query("appId") appID: String,
         @Query("units") units: String = "metric",

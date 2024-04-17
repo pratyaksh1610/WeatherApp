@@ -6,14 +6,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.pratyakshkhurana.weatherapp.DataClass.EveryThreeHourRecyclerView
+import com.pratyakshkhurana.weatherapp.DataClass.ThisWeekDataDateAndWeather
 import com.pratyakshkhurana.weatherapp.databinding.RecyclerViewEveryThreeHourWeatherItemBinding
 
-class EveryThreeHourAdapter(
+class ThisWeekWeatherAdapter(
     private val context: Context,
-    val data: MutableList<EveryThreeHourRecyclerView>,
+    val data: MutableList<ThisWeekDataDateAndWeather>,
 ) :
-    RecyclerView.Adapter<EveryThreeHourAdapter.EveryThreeHourViewHolder>() {
+    RecyclerView.Adapter<ThisWeekWeatherAdapter.EveryThreeHourViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
@@ -31,12 +31,12 @@ class EveryThreeHourAdapter(
         holder: EveryThreeHourViewHolder,
         position: Int,
     ) {
-        holder.timeAmPm.text = data[position].time
-        holder.temp.text = data[position].temp + "°C"
-        Log.e("qq", "onBindViewHolder: ${data[position].codeImg}")
+        holder.day.text = data[position].date
+        holder.temp.text = data[position].temperature + "°C"
+        Log.e("qq", "onBindViewHolder: ${data[position].icon}")
         Glide
             .with(context)
-            .load("https://openweathermap.org/img/wn/${data[position].codeImg}@2x.png")
+            .load("https://openweathermap.org/img/wn/${data[position].icon}@2x.png")
             .centerCrop()
             .into(holder.icon)
     }
@@ -47,7 +47,7 @@ class EveryThreeHourAdapter(
 
     class EveryThreeHourViewHolder(binding: RecyclerViewEveryThreeHourWeatherItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        val timeAmPm = binding.timeAmPm
+        val day = binding.dayOfWeek
         val temp = binding.temp
         val icon = binding.weatherIcon
     }

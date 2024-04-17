@@ -1,6 +1,7 @@
 package com.pratyakshkhurana.weatherapp
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -8,17 +9,18 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.pratyakshkhurana.weatherapp.Adapters.EveryThreeHourAdapter
 import com.pratyakshkhurana.weatherapp.Adapters.OnSearchViewHistoryItemClicked
 import com.pratyakshkhurana.weatherapp.Adapters.SearchViewHistoryAdapter
+import com.pratyakshkhurana.weatherapp.Adapters.ThisWeekWeatherAdapter
 import com.pratyakshkhurana.weatherapp.Api.RetrofitInstance
-import com.pratyakshkhurana.weatherapp.DataClass.EveryThreeHourRecyclerView
+import com.pratyakshkhurana.weatherapp.DataClass.ThisWeekDataDateAndWeather
 import com.pratyakshkhurana.weatherapp.Database.DatabaseClass
 import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
@@ -27,6 +29,7 @@ import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelClass
 import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelFactoryClass
 import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -111,6 +114,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
         binding.mainWeatherLayout.mainWeatherLayoutXml.visibility = View.VISIBLE
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun getCurrentCityWeatherData(toString: String) {
         binding.swipeRefreshLayout.isRefreshing = false
         viewModel.getAllWeatherData(toString, RetrofitInstance.API_KEY)
@@ -159,45 +163,97 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 },
             )
 
-        viewModel.getCurrentWeatherEveryThreeHourLiveData().observe(
+        viewModel.getCurrentWeekWeatherLiveData().observe(
             this@MainActivity,
             Observer {
                 if (it != null) {
-                    binding.mainWeatherLayout.recyclerViewTodayAllTimeWeatherThreeHour.layoutManager =
+                    binding.mainWeatherLayout.recyclerViewThisWeekWeather.layoutManager =
                         LinearLayoutManager(
                             this,
                             LinearLayoutManager.HORIZONTAL,
                             false,
                         )
-                    val listEveryThreeHourOfCurrentDate =
-                        mutableListOf<EveryThreeHourRecyclerView>()
+
+                    val listThisWeekDateAndTemperature = mutableListOf<ThisWeekDataDateAndWeather>()
                     for (i in it.list) {
-                        if (i.dt_txt.startsWith(todaysDate())) {
-                            listEveryThreeHourOfCurrentDate.add(
-                                EveryThreeHourRecyclerView(
-                                    getTimeInAmPm(i.dt_txt).trim(),
-                                    i.weather[0].icon,
-                                    i.main.temp.toInt().toString().trim(),
-                                ),
-                            )
-                            Log.e(
-                                "ta",
-                                "${getTimeInAmPm(i.dt_txt)} , ${i.main.temp}, ${i.weather[0].icon} ",
-                            )
-                        }
+                        val dateAndTime = i.dt_txt
+                        val date = dateAndTime.substringBefore(" ").trim()
+                        Log.e("pl", i.dt_txt + " - " + date)
+                        listThisWeekDateAndTemperature.add(
+                            ThisWeekDataDateAndWeather(
+                                date,
+                                i.main.temp.toInt().toString().trim(),
+                                i.weather[0].icon,
+                            ),
+                        )
                     }
+                    val thisWeekTempData = getTemperatureForWeek(listThisWeekDateAndTemperature)
+
                     val adapter =
-                        EveryThreeHourAdapter(this@MainActivity, listEveryThreeHourOfCurrentDate)
-                    binding.mainWeatherLayout.recyclerViewTodayAllTimeWeatherThreeHour.adapter =
+                        ThisWeekWeatherAdapter(this@MainActivity, thisWeekTempData)
+                    binding.mainWeatherLayout.recyclerViewThisWeekWeather.adapter =
                         adapter
                 }
             },
         )
-
-        getThisWeekWeather(toString)
     }
 
-    private fun getThisWeekWeather(c: String) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getTemperatureForWeek(l: MutableList<ThisWeekDataDateAndWeather>): MutableList<ThisWeekDataDateAndWeather> {
+        val uniqueFieldsMap = mutableMapOf<String, Pair<String, String>>()
+        for (i in l) {
+            i.date = convertDateToDay(i.date)
+        }
+
+        // mapping objects
+        l.forEach { obj ->
+            if (!uniqueFieldsMap.containsKey(obj.date)) {
+                uniqueFieldsMap[obj.date] = Pair(obj.temperature, obj.icon)
+            }
+        }
+
+        Log.e("pll", uniqueFieldsMap.toString())
+
+        val finalThisWeekTempData = mutableListOf<ThisWeekDataDateAndWeather>()
+
+        uniqueFieldsMap.forEach { (firstField, pair) ->
+            val (secondField, thirdField) = pair
+            finalThisWeekTempData.add(
+                ThisWeekDataDateAndWeather(
+                    firstField,
+                    secondField,
+                    thirdField,
+                ),
+            )
+        }
+
+        return finalThisWeekTempData
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun convertDateToDay(dateString: String): String {
+        // Parse the date string into a LocalDate object
+        val date = LocalDate.parse(dateString)
+
+        // Get the day of the week corresponding to the date
+        val dayOfWeek = date.dayOfWeek
+
+        // Convert DayOfWeek enum to the name of the day
+        var weekDayName =
+            dayOfWeek.toString().lowercase()
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+
+        println("The day corresponding to $dateString is $weekDayName.")
+        when (weekDayName) {
+            "Monday" -> weekDayName = "Mon"
+            "Tuesday" -> weekDayName = "Tue"
+            "Wednesday" -> weekDayName = "Wed"
+            "Thursday" -> weekDayName = "Thu"
+            "Friday" -> weekDayName = "Fri"
+            "Saturday" -> weekDayName = "Sat"
+            "Sunday" -> weekDayName = "Sun"
+        }
+        return weekDayName
     }
 
     private fun getTimeInAmPm(input: String): String {

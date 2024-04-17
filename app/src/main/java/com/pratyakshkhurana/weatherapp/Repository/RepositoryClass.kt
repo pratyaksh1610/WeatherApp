@@ -36,10 +36,10 @@ class RepositoryClass(private val db: DatabaseClass) {
         db.searchViewHistoryDao().deleteAllRecyclerViewItems()
     }
 
-    suspend fun getCurrentWeatherEveryThreeHour(
+    suspend fun getThisWeekWeather(
         city: String,
         key: String,
     ): Response<EveryThreeHourWeatherForecast> {
-        return RetrofitInstance.api.getCurrentWeatherEveryThreeHour(city, key)
+        return RetrofitInstance.api.getThisWeekWeather(city, key)
     }
 }

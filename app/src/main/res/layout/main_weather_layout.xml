@@ -259,7 +259,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
-                android:text="Today"
+                android:text="This week"
                 android:textSize="30sp" />
 
         </LinearLayout>
@@ -276,7 +276,7 @@
                 app:cardCornerRadius="20dp">
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerViewTodayAllTimeWeatherThreeHour"
+                    android:id="@+id/recycler_view_this_week_weather"
                     android:layout_width="wrap_content"
                     android:layout_gravity="center"
                     android:layout_height="wrap_content"
@@ -295,7 +295,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
-                android:text="This Week"
+                android:text="Todo"
                 android:textSize="30sp" />
 
         </LinearLayout>
