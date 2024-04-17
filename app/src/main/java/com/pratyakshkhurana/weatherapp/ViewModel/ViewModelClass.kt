@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pratyakshkhurana.weatherapp.DataClass.CurrentWeather
+import com.pratyakshkhurana.weatherapp.DataClass.EveryThreeHourWeatherForecast
 import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
 import kotlinx.coroutines.Deferred
@@ -17,6 +18,7 @@ class ViewModelClass(
     private val repositoryClass: RepositoryClass,
 ) : ViewModel() {
     private val currentWeather: MutableLiveData<CurrentWeather> = MutableLiveData()
+    private val currentWeatherEveryThreeHour: MutableLiveData<EveryThreeHourWeatherForecast> = MutableLiveData()
 
     fun insertSearchViewHistoryItem(search: SearchViewHistory) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -61,5 +63,16 @@ class ViewModelClass(
         viewModelScope.launch(Dispatchers.IO) {
             repositoryClass.deleteAllRecyclerViewItems()
         }
+    }
+
+    fun getCurrentWeatherEveryThreeHour(
+        city: String,
+        key: String,
+    ): MutableLiveData<EveryThreeHourWeatherForecast> {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repositoryClass.getCurrentWeatherEveryThreeHour(city, key)
+            currentWeatherEveryThreeHour.postValue(response.body())
+        }
+        return currentWeatherEveryThreeHour
     }
 }

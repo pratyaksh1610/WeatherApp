@@ -112,4 +112,7 @@ dependencies {
 
     // shimmer effect
     implementation("com.facebook.shimmer:shimmer:0.5.0")
+
+    // glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }

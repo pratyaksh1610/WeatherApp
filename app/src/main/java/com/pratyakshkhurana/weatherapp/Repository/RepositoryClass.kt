@@ -3,6 +3,7 @@ package com.pratyakshkhurana.weatherapp.Repository
 import androidx.lifecycle.LiveData
 import com.pratyakshkhurana.weatherapp.Api.RetrofitInstance
 import com.pratyakshkhurana.weatherapp.DataClass.CurrentWeather
+import com.pratyakshkhurana.weatherapp.DataClass.EveryThreeHourWeatherForecast
 import com.pratyakshkhurana.weatherapp.Database.DatabaseClass
 import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import retrofit2.Response
@@ -31,7 +32,14 @@ class RepositoryClass(private val db: DatabaseClass) {
         return db.searchViewHistoryDao().isPresent(t)
     }
 
-    suspend fun deleteAllRecyclerViewItems()  {
+    suspend fun deleteAllRecyclerViewItems() {
         db.searchViewHistoryDao().deleteAllRecyclerViewItems()
+    }
+
+    suspend fun getCurrentWeatherEveryThreeHour(
+        city: String,
+        key: String,
+    ): Response<EveryThreeHourWeatherForecast> {
+        return RetrofitInstance.api.getCurrentWeatherEveryThreeHour(city, key)
     }
 }

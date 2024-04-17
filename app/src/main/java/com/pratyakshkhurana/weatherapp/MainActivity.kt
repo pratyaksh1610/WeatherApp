@@ -14,9 +14,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.pratyakshkhurana.weatherapp.Adapters.EveryThreeHourAdapter
 import com.pratyakshkhurana.weatherapp.Adapters.OnSearchViewHistoryItemClicked
 import com.pratyakshkhurana.weatherapp.Adapters.SearchViewHistoryAdapter
 import com.pratyakshkhurana.weatherapp.Api.RetrofitInstance
+import com.pratyakshkhurana.weatherapp.DataClass.EveryThreeHourRecyclerView
 import com.pratyakshkhurana.weatherapp.Database.DatabaseClass
 import com.pratyakshkhurana.weatherapp.Entity.SearchViewHistory
 import com.pratyakshkhurana.weatherapp.Repository.RepositoryClass
@@ -24,6 +26,11 @@ import com.pratyakshkhurana.weatherapp.SharedPreferences.SharedPrefs
 import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelClass
 import com.pratyakshkhurana.weatherapp.ViewModel.ViewModelFactoryClass
 import com.pratyakshkhurana.weatherapp.databinding.ActivityMainBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
     private lateinit var binding: ActivityMainBinding
@@ -42,6 +49,10 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        /*************/
+
+        // ////////////////////////
 
         // initialise late init variables
         initialiseInstances()
@@ -106,7 +117,7 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                 Observer { it ->
                     if (it != null) {
                         // to get unique entries in search view history recycler view
-                        sharedPreferences.saveCountryOrCity(toString)
+//                        sharedPreferences.saveCountryOrCity(toString)
                         if (viewModel.isPresent(toString) == 0) {
                             viewModel.insertSearchViewHistoryItem(
                                 SearchViewHistory(null, toString),
@@ -142,6 +153,83 @@ class MainActivity : AppCompatActivity(), OnSearchViewHistoryItemClicked {
                     }
                 },
             )
+        getCurrentWeatherEveryThreeHours(toString)
+    }
+
+    private fun getCurrentWeatherEveryThreeHours(c: String) {
+        viewModel.getCurrentWeatherEveryThreeHour(c, RetrofitInstance.API_KEY).observe(
+            this@MainActivity,
+            Observer {
+                if (it != null) {
+                    binding.mainWeatherLayout.recyclerViewTodayAllTimeWeatherThreeHour.layoutManager =
+                        LinearLayoutManager(
+                            this,
+                            LinearLayoutManager.HORIZONTAL,
+                            false,
+                        )
+                    val listEveryThreeHourOfCurrentDate =
+                        mutableListOf<EveryThreeHourRecyclerView>()
+                    for (i in it.list) {
+                        if (i.dt_txt.startsWith(todaysDate())) {
+                            listEveryThreeHourOfCurrentDate.add(
+                                EveryThreeHourRecyclerView(
+                                    getTimeInAmPm(i.dt_txt).trim(),
+                                    i.weather[0].icon,
+                                    i.main.temp.toInt().toString().trim(),
+                                ),
+                            )
+                            Log.e(
+                                "ta",
+                                "${getTimeInAmPm(i.dt_txt)} , ${i.main.temp}, ${i.weather[0].icon} ",
+                            )
+                        }
+                    }
+                    val adapter =
+                        EveryThreeHourAdapter(this@MainActivity, listEveryThreeHourOfCurrentDate)
+                    binding.mainWeatherLayout.recyclerViewTodayAllTimeWeatherThreeHour.adapter =
+                        adapter
+                }
+            },
+        )
+
+        getThisWeekWeather(c)
+    }
+
+    private fun getThisWeekWeather(c: String) {
+    }
+
+    private fun getTimeInAmPm(input: String): String {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("hh a", Locale.getDefault())
+
+        val date = inputFormat.parse(input)
+        val outputTimeString = outputFormat.format(date!!)
+        Log.e("date", "getCurrentWeatherEveryThreeHours: $outputTimeString")
+        return outputTimeString
+    }
+
+    private fun todaysDate(): String {
+        // Get current date
+        // Get current date
+        val calendar: Calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val currentDate: String = dateFormat.format(calendar.time)
+
+        Log.d("CurrentDate", currentDate)
+        return currentDate
+    }
+
+    private fun convertEpochTimeStampDtxToIst() {
+        // Convert Epoch Unix Timestamp to GMT
+        val currentEpochTimestamp = System.currentTimeMillis() / 1000
+
+        val date = Date(currentEpochTimestamp * 1000L)
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        sdf.timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+        val gmtTime = sdf.format(date)
+
+        // Print or use the GMT time as needed
+        Log.d("GMT", gmtTime)
     }
 
     private fun initialiseSearchViewRecyclerView() {
